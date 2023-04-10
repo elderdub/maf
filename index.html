@@ -5,13 +5,10 @@
 		<meta name="viewport" content="width=device-width, initial-scale=1" />
 		<meta name="author" content="//github.com/elderdub" />
 		<meta name="illustration" content="//derekq-art.tumblr.com" />
-		<meta name="version" content="0.12" />
+		<meta name="version" content="0.12α" />
 		<meta name="description" content="Licensed under the GNU AGPL License 3.0 - //www.gnu.org/licenses/agpl.html" />
 		<title>Mafia Administrative Utility for Offline Gaming</title>
 		<link rel="icon" href="./favicon.ico" type="image/x-icon" />
-																
-																
-							
 		<style>
 body {
 	background-color: #212C21;
@@ -101,7 +98,7 @@ body.revealing > .desk > .player.maf.revealing:before,
 body.revealing > .desk > .player.don.revealing:before,
 body.revealing > .desk > .player.maniac.revealing.mafs-defeated:before { color: black; content: '♠' }
 
-.player:after { content: '👶'; }
+.player:after { content: '👶' }
 .chair:after { content: '🪑'; }
 .chair:hover { background-color: #FF02 }
 .chair:hover:after { opacity: .9 }
@@ -153,7 +150,7 @@ body.vh > .bottom-controls button { width: 22vh }
 
 .desk > .player.hidden-role:after { content: '🦝' }
 
-.reset { position: fixed; bottom: 8px; right: 8px; font-size: 3.6em; width: 80px; height: 80px }
+.reset { position: fixed; bottom: 8px; right: 8px; font-size: 3.6em; width: 80px; height: 80px; z-index: 1 }
 .vh .reset { bottom: 1vh; right: 1vh; width: 10vh; height: 10vh }
 .reset:after { content: '🔄' }
 
@@ -376,6 +373,7 @@ h2 { transition: transform .3s linear}
 
 					// start daylight mode
 					if(isMidnight) {
+						this.els(this.desk, '.half-a-minute-speech').forEach(removeSpeech => removeSpeech.classList.remove('half-a-minute-speech'));
 
 						// whore brings one to death
 						var deadWhore = this.el(this.desk, '.killed.whore');
