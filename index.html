@@ -1,14 +1,13 @@
 <!DOCTYPE html>
 <html lang="ru">
 	<head>
-		<meta charset="UTF-8" />
-		<meta name="viewport" content="width=device-width, initial-scale=1" />
-		<meta name="author" content="//github.com/elderdub" />
-		<meta name="illustration" content="//derekq-art.tumblr.com" />
-		<meta name="version" content="0.12α" />
-		<meta name="description" content="Licensed under the GNU AGPL License 3.0 - //www.gnu.org/licenses/agpl.html" />
-		<title>Mafia Administrative Utility for Offline Gaming</title>
-		<link rel="icon" href="./favicon.ico" type="image/x-icon" />
+		<meta charset="UTF-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<meta name="author" content="//github.com/elderdub">
+		<meta name="illustration" content="//derekq-art.tumblr.com">
+		<meta name="description" content="Licensed under the GNU AGPL License 3.0 - //www.gnu.org/licenses/agpl.html">
+		<title>Mafia Administrative Utility for Offline Gaming v0.12α</title>
+		<link rel="icon" href="./favicon.ico" type="image/x-icon">
 		<style>
 body {
 	background-color: #212C21;
@@ -30,15 +29,13 @@ h1, h2, h3, h4, h5, h6 { font-weight: normal }
 h2 { text-align: center; font-size: 1.5em }
 .round-start { transform: scale(5) }
 div { position: relative }
-input { background-color: dimgrey; color: gainsboro; border: lightgrey 1px solid; border-radius: 2px }
-.vh input { border-width: .125vh; border-radius: .25vh }
-input[type="number"] { width: 64px }
-.vh input { width: 8vh }
+input { background-color: dimgrey; color: gainsboro; border: lightgrey 1px solid; border-radius: 2px; width: 64px }
+.vh input { border-width: .125vh; border-radius: .25vh; width: 8vh }
 
 .error-field { background-color: #CD5C5C44; border-color: firebrick; color: firebrick }
 
 button { background-color: royalblue; color: white; border: none; border-radius: 4px 0; padding: 8px 0; font-size: .8em }
-.vh button { border-radius: .5vh 0; padding: 1vh 0; }
+.vh button { border-radius: .5vh 0; padding: 1vh 0 }
 button:active { background-color: #3159D1; color: #FFFA; transform: scale(.96) }
 button.without { background-color: slategrey; color: #FFF8 }
 button.without:active { background-color: #607080; color: #FFF4 }
@@ -53,7 +50,7 @@ body > div, .speak-timer { width: 560px; margin: 0 auto; background-color: #212C
 body.vh > div, .speak-timer { width: 70vh; border-radius: 5vh }
 body > div:nth-child(n+2) { margin-top: 10px }
 body.vh > div:nth-child(n+2) { margin-top: 1.25vh }
-.controls { display: flex; flex-direction: column; row-gap: 10px; flex-grow: 1 }
+.controls { flex-direction: column; row-gap: 10px; flex-grow: 1 }
 .vh .controls { row-gap: 1.25vh }
 .controls > div { display: flex; column-gap: 10px; align-items: center; justify-content: flex-start; flex-grow: 1 }
 .vh .controls > div { column-gap: 1.25vh }
@@ -175,7 +172,6 @@ h2 { transition: transform .3s linear}
 (function() {
 	function TM_MAF(params) {
 		this.secondsToMilliseconds = 1000;
-		//this.secondsToMilliseconds = 10;
 		if(params) {
 			Object.entries(params).forEach(( [ k, v ] ) => {
 				this[k] = v;
@@ -239,7 +235,7 @@ h2 { transition: transform .3s linear}
 				window.removeEventListener('touchend', e => {
 					this.chairRelease(e);
 				});
-				
+
 			} else {
 				window.removeEventListener('mousemove', e => {
 					this.chairDrag(e);
@@ -267,7 +263,6 @@ h2 { transition: transform .3s linear}
 			this.chairDrag(e);
 		},
 		clickHandler: function(e) {
-//console.log(e.target);
 			const nextButton = this.el(this.controls, '.next');
 			const isMidnight = nextButton && nextButton.innerHTML == this.L.startDay;
 			const isRepeatedDebate = this.el(this.controls, 'h2').innerHTML == this.L.repeatedDebate;
@@ -418,7 +413,7 @@ h2 { transition: transform .3s linear}
 
 						// set next button to "start vote" and disable it
 						this.els(this.turn, '.action').forEach(removeActionButton => removeActionButton.remove());
-						
+
 						//unset unfinished midnight turn
 						if(this.midnightTurn) {
 							delete this.midnightTurn;// on start day
@@ -571,7 +566,7 @@ h2 { transition: transform .3s linear}
 							}
 							this.el(this.controls, '.' + this.midnightTurn).classList.remove('active');
 							delete this.midnightTurn;// on applying current midnight turn
-						
+
 						// daylight mode - set voted status
 						} else if(!isMidnight && !isRepeatedDebate && !isVoteStarted) {
 							playerButton.classList.toggle('voted');
@@ -960,7 +955,7 @@ h2 { transition: transform .3s linear}
 					this.chairGrab(e);
 				});
 			});
-			
+
 			if(this.el(this.controls, '.start').classList.contains('hidden')) {
 				this.el(this.controls, '.start').classList.remove('hidden');
 			}
@@ -1115,11 +1110,11 @@ h2 { transition: transform .3s linear}
 			if(this.voteOrder) {
 				delete this.voteOrder;
 			}
-			
 
 			// calculate game continue conditions
 			if(!this.validateGame()) {
-				//return;
+
+				//return;// development
 			}
 
 			// Midnight mode
@@ -1145,7 +1140,7 @@ h2 { transition: transform .3s linear}
 
 			// save newly started round
 			this.saveState();
-			
+
 			const turnInit = !this.turn;
 			const turn = this.makeIfNew(null, 'div', 'turn', actionRoles.sort((a, b) => {
 				return [ 'doctor', 'sheriff' ].includes(a)
@@ -1226,7 +1221,6 @@ h2 { transition: transform .3s linear}
 					++game.maniac;
 				} else ++game.world;
 			});
-//console.log(game);
 			if(game.world <= game.maf) {
 				alert(this.L.winMaf);
 				return false;
