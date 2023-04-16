@@ -6,7 +6,8 @@
 		<meta name="author" content="//github.com/elderdub">
 		<meta name="illustration" content="//derekq-art.tumblr.com">
 		<meta name="description" content="Licensed under the GNU AGPL License 3.0 - //www.gnu.org/licenses/agpl.html">
-		<title>Mafia Administrative Utility for Offline Gaming v0.12α</title>
+
+		<title>Mafia Administrative Utility for Offline Gaming v0.13α</title>
 		<link rel="icon" href="./favicon.ico" type="image/x-icon">
 		<style>
 body {
@@ -147,8 +148,8 @@ body.vh > .bottom-controls button { width: 22vh }
 
 .desk > .player.hidden-role:after { content: '🦝' }
 
-.reset { position: fixed; bottom: 8px; right: 8px; font-size: 3.6em; width: 80px; height: 80px; z-index: 1 }
-.vh .reset { bottom: 1vh; right: 1vh; width: 10vh; height: 10vh }
+.reset { position: fixed; bottom: 8px; right: 8px; font-size: 2.4em; width: 64px; height: 64px; z-index: 1 }
+.vh .reset { bottom: 1vh; right: 1vh; width: 8vh; height: 8vh }
 .reset:after { content: '🔄' }
 
 .half-a-minute-speech { border: firebrick 3px solid }
@@ -158,10 +159,15 @@ body.vh > .bottom-controls button { width: 22vh }
 .votes { margin-top: -4% }
 .vh .votes input { width: 12vh }
 .controls, .reset, .controls > div.speak-timer { display: flex; align-items: center; justify-content: center }
-.controls > div.speak-timer { top: 0; left: 0; height: 100%; color: whitesmoke; border: forestgreen 3px solid }
+.controls > div.speak-timer { font-size: 6.67em; top: 0; left: 0; height: 100%; color: whitesmoke; border: forestgreen 3px solid; color: #76DE76;
+	transition: background-color 20s, border-color 20s, color 20s }
 .vh .controls > div.speak-timer { border-width: .38vh }
-.controls > div.speak-timer.hurry-up { background-color: #B8860B88; border-color: darkgoldenrod }
-.controls > div.speak-timer.exceed { background-color: #A2121288; border-color: firebrick }
+.controls > div.speak-timer.hurry-up { background-color: #B8860B88; border-color: darkgoldenrod; color: white }
+.controls > div.speak-timer.exceed { background-color: #A2121288; border-color: firebrick; color: white;
+	transition: background-color 10s, border-color 10s , color 10s }
+.speak-timer > span { text-shadow: 0 1px 0 #0008; transition: opacity .3s }
+.vh .speak-timer > span { text-shadow: 0 .25vh 0 #0008 }
+.speak-timer > span.op2 { opacity: 0; transition: opacity 1s }
 
 button, .chair:after { transition: .75s }
 .chair { transition: background-color .3s, border-color .3s, font-size 1s, width 1s, height 1s }
@@ -264,8 +270,9 @@ h2 { transition: transform .3s linear}
 		},
 		clickHandler: function(e) {
 			const nextButton = this.el(this.controls, '.next');
+			const h2 = this.el(this.controls, 'h2');
 			const isMidnight = nextButton && nextButton.innerHTML == this.L.startDay;
-			const isRepeatedDebate = this.el(this.controls, 'h2').innerHTML == this.L.repeatedDebate;
+			const isRepeatedDebate = h2 && h2.innerHTML == this.L.repeatedDebate;
 			const isVoteStarted = nextButton && nextButton.innerHTML == this.L.voteFinish;
 			const roundNumber = this.cfg.stat.length - 1;
 
@@ -305,15 +312,7 @@ h2 { transition: transform .3s linear}
 			const resetAllButton = e.target.closest('.reset');
 			if(resetAllButton) {
 				if(confirm(this.L.resetAll)) {
-					this.cfg.stat = [];
-					this.els('.hide-roles, .turn').forEach(removeControls => removeControls.remove());
-					[ 'midnightTurn', 'roleDefining', 'turn', 'votedLeft', 'voteOrder'].forEach(deleteStorage => {
-						if(this[deleteStorage]) {
-							delete this[deleteStorage];
-						}
-					});
-					this.saveState();
-					this.stageConfigure();
+					this.reset()
 				}
 				return;
 			}
@@ -368,6 +367,13 @@ h2 { transition: transform .3s linear}
 
 					// start daylight mode
 					if(isMidnight) {
+
+						//unset unfinished midnight turn
+						if(this.midnightTurn) {
+							delete this.midnightTurn;// on start day
+						}
+
+						// clear unfinished midnight speakers
 						this.els(this.desk, '.half-a-minute-speech').forEach(removeSpeech => removeSpeech.classList.remove('half-a-minute-speech'));
 
 						// whore brings one to death
@@ -414,10 +420,6 @@ h2 { transition: transform .3s linear}
 						// set next button to "start vote" and disable it
 						this.els(this.turn, '.action').forEach(removeActionButton => removeActionButton.remove());
 
-						//unset unfinished midnight turn
-						if(this.midnightTurn) {
-							delete this.midnightTurn;// on start day
-						}
 						controlsButton.innerHTML = this.L.voteStart;
 						controlsButton.disabled = true;
 						return this.validateGame();
@@ -530,10 +532,18 @@ h2 { transition: transform .3s linear}
 							}
 
 							// killing a player
-							if(['maf', 'maniac'].includes(this.midnightTurn)) {
+							if([ 'maf', 'maniac' ].includes(this.midnightTurn)) {
 								Object.values(this.els(this.desk, '.killed')).filter(killed => {
-									return !killed.classList.contains('inactive');
+									return !killed.classList.contains('inactive')
+									&& killed.classList.contains('by-' + this.midnightTurn);// by-maf, by-maniac
 								}).forEach(killed => {
+
+									// do not unkill those twice-killed
+									const secondKiller = this.midnightTurn == 'maf' ? 'maniac' : 'maf';
+									if(killed.classList.contains('by-' + secondKiller)) {
+										killed.classList.remove('by-' + this.midnightTurn);
+										return;
+									}
 									this.playerOut('unkill', killed, roundNumber);
 								});
 								this.playerOut('killed', playerButton, roundNumber);
@@ -662,6 +672,7 @@ h2 { transition: transform .3s linear}
 				back: 'Назад',
 				displayRoles: 'Показать роли',
 				hideRoles: 'Скрыть роли',
+				incompatibleReset: 'К сож., версия хранилища на устройстве устарела. Придётся сбросить прогресс',
 				jailAll: 'Удалить всех',
 				jailNone: 'Не удалять никого',
 				next: 'Продолжить',
@@ -673,6 +684,7 @@ h2 { transition: transform .3s linear}
 				repeatedDebate: 'Повторные прения',
 				resetPositions: 'Сбросить расположение',
 				startDay: 'Начать день',
+				timeUp: 'Время',
 				turnDoctor: 'Ход доктора',
 				turnDon: 'Ход дона',
 				turnMaf: 'Ход мафии',
@@ -716,6 +728,11 @@ h2 { transition: transform .3s linear}
 			});
 			this.makeIfNew('div', 'reset');
 			this.initialized = true;
+
+			if(this.cfg.stat.length > 1 && (!this.cfg.v || this.cfg.v < this.backwardCompatible)) {
+				alert(this.L.incompatibleReset);
+				return this.reset();
+			}
 			this.stageConfigure();
 		},
 		listExistingRoles: function() {
@@ -778,13 +795,35 @@ h2 { transition: transform .3s linear}
 				roundNumber = this.cfg.stat.length - 1;
 			}
 			const chairId = this.getNumber(player);
+			const killerCodes = {
+				maf: 'maf',
+				maniac: 'mn'
+			};
 			if(className == 'unkill') {
+
 				player.classList.remove('killed');
-				this.cfg.stat[roundNumber].k.splice(this.cfg.stat[roundNumber].k.findIndex(v => v == chairId), 1);
+				if(this.midnightTurn) {
+					const k = 'k' + killerCodes[this.midnightTurn];
+					player.classList.remove('by-' + this.midnightTurn);
+					this.cfg.stat[roundNumber][k].splice(this.cfg.stat[roundNumber][k].findIndex(v => v == chairId), 1);
+				} else {
+					Object.keys(killerCodes).forEach(killer => {
+						if(!player.classList.contains('by-' + killer)) {
+							return;
+						}
+						const k = 'k' + killerCodes[killer];
+						player.classList.remove('by-' + killer);
+						this.cfg.stat[roundNumber][k].splice(this.cfg.stat[roundNumber][k].findIndex(v => v == chairId), 1);
+					});
+				}
 				return this.saveState();
 			}
 			player.classList.add(className);
-			const k = className.charAt(0);
+			if(className == 'killed' && this.midnightTurn) {
+				player.classList.add('by-' + this.midnightTurn);
+			}
+
+			const k = className.charAt(0) + (className == 'killed' && this.midnightTurn ? killerCodes[this.midnightTurn] : '');
 			if(!this.cfg.stat[roundNumber][k]) {
 				this.cfg.stat[roundNumber][k] = [];
 			}
@@ -793,6 +832,17 @@ h2 { transition: transform .3s linear}
 		},
 		removeCookie: function(name) {
 			document.cookie = 'maf_' + name + '=; expires=' + new Date(0).toUTCString() + '; samesite=strict';
+		},
+		reset: function() {
+			this.cfg.stat = [];
+			this.els('.hide-roles, .turn').forEach(removeControls => removeControls.remove());
+			[ 'midnightTurn', 'roleDefining', 'turn', 'votedLeft', 'voteOrder'].forEach(deleteStorage => {
+				if(this[deleteStorage]) {
+					delete this[deleteStorage];
+				}
+			});
+			this.saveState();
+			this.stageConfigure();
 		},
 		saveCfg: function() {
 			Object.entries(this.cfg).forEach(( [ k, v ] ) => {
@@ -860,7 +910,7 @@ h2 { transition: transform .3s linear}
 				}
 			}
 
-			// break the loop on reaching 0:00:00
+			// break the loop on reaching 0 seconds
 			if(sec > 0) {
 				setTimeout((e) => {
 					this.speakFor(e);
@@ -871,13 +921,39 @@ h2 { transition: transform .3s linear}
 			}
 			const speakTimer = this.makeIfNew(this.controls, 'div', 'speak-timer');
 			speakTimer.dataset.chairId = chairId;
-			const d = new Date(sec * 1000);
-			const time = [ d.getUTCHours(), d.getUTCMinutes(), d.getUTCSeconds() ];
-			speakTimer.innerHTML = time.map(n => (n < 10 ? '0' : '') + n.toString()).join(':');
-			if(sec == 11) {
-				speakTimer.classList.add('hurry-up');
-			} else if(!sec) {
-				speakTimer.classList.remove('hurry-up');
+			speakTimer.innerHTML = '';
+
+			setTimeout(() => {
+				if(!speakTimer) {
+					return;
+				}
+				speakTimer.innerHTML = '<span class="op2">' + (sec || this.L.timeUp) + '</span>';
+				setTimeout(() => {
+					if(!speakTimer) {
+						return;
+					}
+					const span = speakTimer.querySelector('span');
+					span.classList.remove('op2');
+					if(!sec) {
+						return;
+					}
+					setTimeout(function(span) {
+						if(!span) {
+							return;
+						}
+						span.classList.add('op2');
+					}, 450, span);
+				}, 10);
+			}, 10);
+
+			if(sec == 30) {
+				setTimeout(() => {
+					if(!speakTimer) {
+						return;
+					}
+					speakTimer.classList.add('hurry-up');
+				}, 10);
+			} else if(sec == 10) {
 				speakTimer.classList.add('exceed');
 			}
 		},
@@ -912,6 +988,9 @@ h2 { transition: transform .3s linear}
 					return this.stageConfigChairs();
 				}
 			});
+
+			// save storage version
+			this.setCookie('v', this.backwardCompatible);
 
 			if(this.stageConfigChairs() && this.cfg.stat.length) {
 				this.stageDefineRoles();
@@ -1024,22 +1103,29 @@ h2 { transition: transform .3s linear}
 
 			if(this.cfg.stat.length > 1) {
 
-				// roll out players state from saved state
+				// roll out state from cookie save
 				this.cfg.stat.forEach((stat, i) => {
 					if(!i) {
 						return;
 					}
 					[ 'killed', 'jailed' ].forEach(className => {
-						const k = className.charAt(0);
-						if(!stat[k] || !stat[k].length) {
-							return;
-						}
-						stat[k].forEach(playerNumber => {
-							const player = this.el(this.desk, '.chair' + playerNumber);
-							player.classList.add(className);
-							if(i < this.cfg.stat.length - 1) {
-								player.classList.add('inactive');
+						const statTypes = className == 'jailed'
+							? [ className.charAt(0) ]
+							: [ className.charAt(0) + 'maf', className.charAt(0) + 'mn' ];
+						statTypes.forEach(k => {
+							if(!stat[k] || !stat[k].length) {
+								return;
 							}
+							stat[k].forEach(playerNumber => {
+								const player = this.el(this.desk, '.chair' + playerNumber);
+								player.classList.add(className)
+								if(className == 'killed') {
+									player.classList.add('by-' + (k.substr(1) == 'mn' ? 'maniac' : 'maf'));
+								}
+								if(i < this.cfg.stat.length - 1) {
+									player.classList.add('inactive');
+								}
+							});
 						});
 					});
 				});
@@ -1240,8 +1326,11 @@ h2 { transition: transform .3s linear}
 	});
 
 	window.onload = () => {
-		new TM_MAF();
-		//window.m = new TM_MAF( { lang: 'ru' } );
+		new TM_MAF( {
+		//window.m = new TM_MAF( {
+			backwardCompatible: .13,
+			lang: 'ru'
+		} );
 	}
 })();
 	</script>
